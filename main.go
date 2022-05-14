@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/ChromaMinecraft/email-service/config"
@@ -31,10 +29,6 @@ func main() {
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
 	amqpAddr := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.AMQP.User, cfg.AMQP.Password, cfg.AMQP.Host, cfg.AMQP.Port)
-
-	_, cancel := context.WithCancel(context.Background())
-
-	wg := &sync.WaitGroup{}
 
 	conn, err := amqp.Dial(amqpAddr)
 	if err != nil {
@@ -104,9 +98,6 @@ func main() {
 
 	// Handle shutdown
 	fmt.Println("------- Shutdown Signal Received -------")
-	cancel()  // Signal cancellation to context.Context
-	wg.Wait() // Block here until are workers are done
-
 	fmt.Println("All workers done, shutting down!")
 }
 
@@ -189,7 +180,7 @@ func (w *Worker) Start() {
 	}()
 }
 
-//work is the task performer
+// work is the task performer
 func (w *Worker) work(job Job) {
 	log.Printf("-------")
 	log.Printf("Processed by Worker [%d]", w.ID)
